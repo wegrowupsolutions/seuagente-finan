@@ -13,6 +13,7 @@ import Signup from "./pages/Signup";
 import Afiliados from "./pages/Afiliados";
 import Financeiro from "./pages/Financeiro";
 import Vendas from "./pages/Vendas";
+import EditarProduto from "./pages/EditarProduto";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,13 @@ const App = () => (
               <ProtectedRoute>
                 <MainLayout>
                   <Produtos />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/produtos/editar/:id" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <EditarProduto />
                 </MainLayout>
               </ProtectedRoute>
             } />

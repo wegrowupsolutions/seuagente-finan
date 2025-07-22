@@ -16,8 +16,13 @@ export type Database = {
     Tables: {
       products: {
         Row: {
+          commission_rate: number | null
           created_at: string
+          description: string | null
+          facebook_pixel: string | null
+          google_analytics_pixel: string | null
           id: string
+          image_url: string | null
           name: string
           payment_type: string
           price: number
@@ -27,8 +32,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          commission_rate?: number | null
           created_at?: string
+          description?: string | null
+          facebook_pixel?: string | null
+          google_analytics_pixel?: string | null
           id?: string
+          image_url?: string | null
           name: string
           payment_type: string
           price: number
@@ -38,8 +48,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          commission_rate?: number | null
           created_at?: string
+          description?: string | null
+          facebook_pixel?: string | null
+          google_analytics_pixel?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           payment_type?: string
           price?: number

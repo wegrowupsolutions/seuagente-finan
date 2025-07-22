@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,6 +49,7 @@ export default function Produtos() {
   const [loading, setLoading] = useState(true)
   
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   const fetchProducts = async () => {
     try {
@@ -224,7 +226,11 @@ export default function Produtos() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Editar</DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => navigate(`/produtos/editar/${produto.id}`)}
+                              >
+                                Editar
+                              </DropdownMenuItem>
                               <DropdownMenuItem>Ver links de afiliado</DropdownMenuItem>
                               <DropdownMenuItem 
                                 className="text-destructive"
