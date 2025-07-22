@@ -10,11 +10,54 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import seuagenteLogo from "@/assets/seuagente-logo.png"
+import { useAuth } from "@/components/auth/AuthProvider"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
+import { useNavigate } from "react-router-dom"
 
 export function AppHeader() {
   const [showWarningBanner, setShowWarningBanner] = useState(true)
-  const userEmail = "v...xtx@gmai..."
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const navigate = useNavigate()
   const balance = { available: "0", pending: "0" }
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao fazer logout",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Logout realizado com sucesso",
+        })
+        navigate("/login")
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro inesperado",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const getUserDisplayEmail = () => {
+    if (!user?.email) return "Usuário"
+    const email = user.email
+    if (email.length > 15) {
+      const [localPart, domain] = email.split("@")
+      const truncatedLocal = localPart.slice(0, 3) + "..."
+      const truncatedDomain = domain.slice(0, 4) + "..."
+      return `${truncatedLocal}@${truncatedDomain}`
+    }
+    return email
+  }
 
   return (
     <div className="w-full bg-card border-b border-border">
@@ -62,7 +105,7 @@ export function AppHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2">
-                <span className="text-sm">{userEmail}</span>
+                <span className="text-sm">{getUserDisplayEmail()}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -73,7 +116,7 @@ export function AppHeader() {
               <DropdownMenuItem>
                 Meu perfil
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                 Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
