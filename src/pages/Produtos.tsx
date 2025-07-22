@@ -1,9 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { CriarProdutoModal } from "@/components/produtos/CriarProdutoModal"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 import {
   Select,
   SelectContent,
@@ -28,30 +30,71 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Plus, MoreHorizontal, Package, ExternalLink } from "lucide-react"
 
+type Product = {
+  id: string
+  name: string
+  product_type: string
+  price: number
+  status: string
+  created_at: string
+}
+
 export default function Produtos() {
   const [activeTab, setActiveTab] = useState("meus-produtos")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("todos")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [produtos, setProdutos] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  const { toast } = useToast()
 
-  const produtos = [
-    {
-      id: 1,
-      nome: "Curso de Marketing Digital",
-      preco: "R$ 297,00",
-      status: "ativo",
-      vendas: 15,
-      comissao: "30%"
-    },
-    {
-      id: 2,
-      nome: "E-book de Growth Hacking",
-      preco: "R$ 47,00",
-      status: "inativo",
-      vendas: 5,
-      comissao: "25%"
+  const fetchProducts = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        throw error
+      }
+
+      setProdutos(data || [])
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar produtos",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const getProductTypeDisplayName = (type: string) => {
+    switch (type) {
+      case 'curso-online':
+        return 'Curso online'
+      case 'mentoria':
+        return 'Mentoria'
+      case 'evento-online':
+        return 'Evento Online'
+      default:
+        return type
+    }
+  }
+
+  const filteredProdutos = produtos.filter(produto => {
+    const matchesSearch = produto.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "todos" || produto.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
   const coproducoes = [
     {
@@ -130,11 +173,17 @@ export default function Produtos() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {produtos.length > 0 ? (
-                    produtos.map((produto) => (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-12">
+                        Carregando produtos...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredProdutos.length > 0 ? (
+                    filteredProdutos.map((produto) => (
                       <TableRow key={produto.id}>
-                        <TableCell className="font-medium">{produto.nome}</TableCell>
-                        <TableCell>{produto.preco}</TableCell>
+                        <TableCell className="font-medium">{produto.name}</TableCell>
+                        <TableCell>R$ {produto.price.toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge variant={produto.status === "ativo" ? "default" : "secondary"}>
                             {produto.status === "ativo" ? "Ativo" : "Inativo"}
@@ -246,9 +295,10 @@ export default function Produtos() {
           </Card>
         </TabsContent>
       </Tabs>
-      <CriarProdutoModal
-        isOpen={isModalOpen}
+      <CriarProdutoModal 
+        isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
+        onProductCreated={fetchProducts}
       />
     </div>
   )

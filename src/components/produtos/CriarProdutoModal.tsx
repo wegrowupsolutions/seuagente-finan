@@ -10,32 +10,95 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface CriarProdutoModalProps {
   isOpen: boolean
   onClose: () => void
+  onProductCreated: () => void
 }
 
-export function CriarProdutoModal({ isOpen, onClose }: CriarProdutoModalProps) {
+export function CriarProdutoModal({ isOpen, onClose, onProductCreated }: CriarProdutoModalProps) {
   const [nome, setNome] = useState("")
   const [tipoProduto, setTipoProduto] = useState("")
   const [valor, setValor] = useState("")
   const [tipoPagamento, setTipoPagamento] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const { toast } = useToast()
 
-  const handleSubmit = () => {
-    // Aqui você pode adicionar a lógica para salvar o produto
-    console.log({
-      nome,
-      tipoProduto,
-      valor,
-      tipoPagamento
-    })
-    // Resetar o formulário
-    setNome("")
-    setTipoProduto("")
-    setValor("")
-    setTipoPagamento("")
-    onClose()
+  const handleSubmit = async () => {
+    if (!nome || !tipoProduto || !valor || !tipoPagamento) {
+      toast({
+        title: "Erro",
+        description: "Todos os campos são obrigatórios",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    
+    try {
+      // Convert valor to number
+      const price = parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.'))
+      
+      if (isNaN(price) || price <= 0) {
+        toast({
+          title: "Erro",
+          description: "Valor do produto deve ser um número válido",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para criar um produto",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          name: nome,
+          product_type: tipoProduto,
+          price: price,
+          payment_type: tipoPagamento,
+          user_id: user.id
+        })
+
+      if (error) {
+        throw error
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Produto criado com sucesso!",
+      })
+
+      // Resetar o formulário
+      setNome("")
+      setTipoProduto("")
+      setValor("")
+      setTipoPagamento("")
+      onClose()
+      onProductCreated()
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao criar produto",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -91,8 +154,10 @@ export function CriarProdutoModal({ isOpen, onClose }: CriarProdutoModalProps) {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleSubmit}>Criar produto</Button>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? "Criando..." : "Criar produto"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
