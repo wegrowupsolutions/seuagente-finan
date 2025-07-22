@@ -73,6 +73,33 @@ export default function Produtos() {
     }
   }
 
+  const deleteProduct = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId)
+
+      if (error) {
+        throw error
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Produto excluído com sucesso",
+      })
+
+      // Refresh the products list
+      fetchProducts()
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir produto",
+        variant: "destructive",
+      })
+    }
+  }
+
   useEffect(() => {
     fetchProducts()
   }, [])
@@ -199,7 +226,10 @@ export default function Produtos() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem>Editar</DropdownMenuItem>
                               <DropdownMenuItem>Ver links de afiliado</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => deleteProduct(produto.id)}
+                              >
                                 Excluir
                               </DropdownMenuItem>
                             </DropdownMenuContent>
