@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { CriarProdutoModal } from "@/components/produtos/CriarProdutoModal"
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ export default function Produtos() {
   const [activeTab, setActiveTab] = useState("meus-produtos")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("todos")
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const produtos = [
     {
@@ -76,7 +78,10 @@ export default function Produtos() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Produtos</h1>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button 
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={() => setIsModalOpen(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Criar produto
         </Button>
@@ -241,6 +246,10 @@ export default function Produtos() {
           </Card>
         </TabsContent>
       </Tabs>
+      <CriarProdutoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   )
 }
